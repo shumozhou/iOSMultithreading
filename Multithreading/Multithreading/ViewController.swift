@@ -8,10 +8,18 @@
 import UIKit
 
 class ViewController: UIViewController {
-    
+    var workItems: [DispatchWorkItem] = []
+    let group = DispatchGroup()
     override func viewDidLoad() {
         super.viewDidLoad()
-        semaphore()
+        dispatchGroup()
+        let button = UIButton(type: .system)
+        button.setTitle("取消任务", for: .normal)
+        button.addTarget(self, action: #selector(cancelTasks), for: .touchUpInside)
+        button.frame = CGRect(x: 100, y: 100, width: 100, height: 40)
+        self.view.addSubview(button)
+        
+        startGroupTasks()
     }
     /*
      
@@ -59,7 +67,7 @@ class ViewController: UIViewController {
         let queue1 = DispatchQueue(label: "com.example.myQueue", attributes: .concurrent)
         queue1.setTarget(queue: DispatchQueue(label: "com.example.targetQueue", attributes: .concurrent))
         let queue = DispatchQueue(label: "com.example.myQueue", qos: .userInitiated, attributes: .concurrent)
-//        queue.qos = .userInteractive
+        //        queue.qos = .userInteractive
     }
     
     //在主队列中异步执行一个任务
@@ -67,10 +75,10 @@ class ViewController: UIViewController {
         //主队列只能执行异步操作，执行同步操作会卡死
         let queue = DispatchQueue.main
         //禁止执行这种操作
-//        queue.sync {
-//            print("main 1")
-//        }
-     
+        //        queue.sync {
+        //            print("main 1")
+        //        }
+        
         //打印顺序是按顺序执行
         queue.async {
             print("main 11")
@@ -131,5 +139,109 @@ class ViewController: UIViewController {
         }
     }
     
+    
+    func dispatchGroup() {
+        //        创建 Dispatch Group
+        //        可以使用 dispatch_group_create 函数创建一个 Dispatch Group，例如：
+        let group = DispatchGroup()
+        
+        
+        //        可以使用异步队列（例如全局队列）或自定义队列来提交任务，并使用 dispatch_group_enter 和 dispatch_group_leave 来标记任务的开始和结束。例如
+        group.enter()
+        DispatchQueue.global().async {
+            print("执行任务 1")
+            group.leave()
+        }
+        
+        group.enter()
+        DispatchQueue.global().async {
+            print("执行任务 2")
+            group.leave()
+        }
+        
+        //        在上述代码中，创建了一个全局队列，并使用 enter 和 leave 标记了两个异步任务的开始和结束。
+        
+        
+        //        指定回调函数
+        //        可以使用 dispatch_group_notify 函数指定一个在所有任务执行完成后需要执行的回调函数。例如：
+        group.notify(queue: .main) {
+            // 所有任务执行完成后执行的回调函数
+        }
+        
+        //        在上述代码中，使用 notify 方法指定了一个在所有任务执行完成后需要执行的回调函数，该回调函数将在主队列中执行。
+        
+        
+        //        等待任务执行完成
+        //        可以使用 dispatch_group_wait 函数等待所有任务执行完成。例如：
+        
+        let result = group.wait(timeout: .now() + 10)
+        
+        if result == .success {
+            // 所有任务执行完成
+        } else {
+            // 等待超时
+        }
+        
+        //        在上述代码中，使用 wait 方法等待所有任务执行完成，等待时间为 10 秒。
+        //
+        //        需要注意的是，使用 Dispatch Group 时，必须确保在每个任务执行完成后调用 leave 方法，否则会导致 Dispatch Group 一直处于等待状态，从而无法执行回调函数。同时，也可以在任务执行失败时调用 leave 方法，以便更好地处理错误情况。
+        //
+        //        Dispatch Group 可以很方便地实现多个任务的并行执行和执行状态的管理，特别适用于需要并行执行多个任务，并在所有任务都执行完成后进行进一步处理的场景。
+        
+        
+        
+        
+        
+        let queue = DispatchQueue.global(qos: .default)
+        
+        let workItem = DispatchWorkItem {
+            if !Thread.current.isCancelled {
+                // 执行任务逻辑
+                print("执行任务逻辑")
+            }
+        }
+        
+        queue.async(execute: workItem)
+        
+        // 取消任务
+        workItem.cancel()
+    }
+    
+    
+    func startGroupTasks() {
+        let tasks = [task1, task2, task3]
+        
+        tasks.forEach { task in
+            let workItem = DispatchWorkItem(block: task)
+            workItems.append(workItem)
+            DispatchQueue.global(qos: .userInitiated).async(group: group, execute: workItem)
+        }
+        
+        group.notify(queue: .main) {
+            print("所有任务已完成")
+        }
+    }
+    
+    @objc func cancelTasks() {
+        workItems.forEach { $0.cancel() }
+    }
+    
+    func task1() {
+        simulateTask(taskName: "任务1", duration: 3)
+    }
+    
+    func task2() {
+        simulateTask(taskName: "任务2", duration: 2)
+    }
+    
+    func task3() {
+        simulateTask(taskName: "任务3", duration: 1)
+    }
+    
+    func simulateTask(taskName: String, duration: UInt32) {
+        print("\(taskName) 开始执行")
+        sleep(duration)
+        print("\(taskName) 执行完毕")
+    }
 }
 
