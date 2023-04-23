@@ -12,14 +12,15 @@ class ViewController: UIViewController {
     let group = DispatchGroup()
     override func viewDidLoad() {
         super.viewDidLoad()
-        dispatchGroup()
+//        dispatchGroup()
         let button = UIButton(type: .system)
         button.setTitle("取消任务", for: .normal)
         button.addTarget(self, action: #selector(cancelTasks), for: .touchUpInside)
         button.frame = CGRect(x: 100, y: 100, width: 100, height: 40)
         self.view.addSubview(button)
         
-        startGroupTasks()
+//        startGroupTasks()
+        testOperation()
     }
     /*
      
@@ -206,9 +207,9 @@ class ViewController: UIViewController {
         // 取消任务
         workItem.cancel()
         
-//        在上述代码中，使用 DispatchWorkItem 创建了一个任务，并通过 DispatchQueue 异步执行。在任务的 Block 中，通过检查 Thread.current.isCancelled 属性来判断任务是否已被取消。在取消任务时，调用了 DispatchWorkItem 的 cancel() 方法，将任务标记为已取消。
-//
-//        需要注意的是，取消任务并不会立即停止任务的执行，而是在下次任务执行之前检查任务是否已被取消。因此，在 Block 中需要定期检查任务是否已被取消，并在任务被取消时尽早退出任务的执行。
+        //        在上述代码中，使用 DispatchWorkItem 创建了一个任务，并通过 DispatchQueue 异步执行。在任务的 Block 中，通过检查 Thread.current.isCancelled 属性来判断任务是否已被取消。在取消任务时，调用了 DispatchWorkItem 的 cancel() 方法，将任务标记为已取消。
+        //
+        //        需要注意的是，取消任务并不会立即停止任务的执行，而是在下次任务执行之前检查任务是否已被取消。因此，在 Block 中需要定期检查任务是否已被取消，并在任务被取消时尽早退出任务的执行。
     }
     
     
@@ -246,6 +247,37 @@ class ViewController: UIViewController {
         print("\(taskName) 开始执行")
         sleep(duration)
         print("\(taskName) 执行完毕")
+    }
+    
+    func testOperation() {
+        // 创建操作队列
+        let operationQueue = OperationQueue()
+        
+        // 创建任务
+        let operation1 = MyOperation(inputData: "Data 1")
+        let operation2 = MyOperation(inputData: "Data 2")
+        let operation3 = MyOperation(inputData: "Data 3")
+        
+        // 添加依赖关系，控制任务执行顺序
+        operation2.addDependency(operation1)
+        operation3.addDependency(operation2)
+        
+        // 当任务完成后，处理结果数据
+        operation1.completionBlock = {
+            print("Operation 1 result: \(operation1.outputData ?? "No output")")
+        }
+        operation2.completionBlock = {
+            print("Operation 2 result: \(operation2.outputData ?? "No output")")
+        }
+        operation3.completionBlock = {
+            print("Operation 3 result: \(operation3.outputData ?? "No output")")
+        }
+        
+        // 添加任务到队列并开始执行
+        operationQueue.addOperations([operation1, operation2, operation3], waitUntilFinished: false)
+        
+        // 取消任务（如果需要）
+        // operation1.cancel()
     }
 }
 
