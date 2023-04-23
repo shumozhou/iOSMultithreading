@@ -205,6 +205,10 @@ class ViewController: UIViewController {
         
         // 取消任务
         workItem.cancel()
+        
+//        在上述代码中，使用 DispatchWorkItem 创建了一个任务，并通过 DispatchQueue 异步执行。在任务的 Block 中，通过检查 Thread.current.isCancelled 属性来判断任务是否已被取消。在取消任务时，调用了 DispatchWorkItem 的 cancel() 方法，将任务标记为已取消。
+//
+//        需要注意的是，取消任务并不会立即停止任务的执行，而是在下次任务执行之前检查任务是否已被取消。因此，在 Block 中需要定期检查任务是否已被取消，并在任务被取消时尽早退出任务的执行。
     }
     
     
