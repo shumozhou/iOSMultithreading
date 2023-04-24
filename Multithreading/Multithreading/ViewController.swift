@@ -12,14 +12,14 @@ class ViewController: UIViewController {
     let group = DispatchGroup()
     override func viewDidLoad() {
         super.viewDidLoad()
-//        dispatchGroup()
+        //        dispatchGroup()
         let button = UIButton(type: .system)
         button.setTitle("取消任务", for: .normal)
         button.addTarget(self, action: #selector(cancelTasks), for: .touchUpInside)
         button.frame = CGRect(x: 100, y: 100, width: 100, height: 40)
         self.view.addSubview(button)
         
-//        startGroupTasks()
+        //        startGroupTasks()
         testOperation()
     }
     /*
